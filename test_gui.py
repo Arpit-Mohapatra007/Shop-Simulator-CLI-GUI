@@ -75,7 +75,14 @@ def buget_record():
 	budget.pack()
 
 def render_cart():
+	TableHeading(cart_frame,"Item Name",0)
+	TableHeading(cart_frame,"Price",1)
+	TableHeading(cart_frame,"Quantity",2)
+	TableHeading(cart_frame,"Total Price",3)
 
+def update_cart():
+	# if name exists then only update quantity
+	# if new item is added i.e. name doesnt exists create all the columns 
 
 root = tk.Tk()
 root.title("Shop Simulator GUI")
@@ -99,8 +106,6 @@ tk.Label(
 budget_frame = tk.Frame(root)
 budget_frame.pack()
 
-hint = "Enter you Budget.."
-
 budget_entry = tk.Entry(
 	budget_frame,
 	bd=1,
@@ -111,21 +116,24 @@ budget_entry = tk.Entry(
 	font=("Times New Roman",30)
 	)
 
-budget_entry.insert(0,hint)
+class Hint:
+	def __init__ (self,entry,hint):
+		self.entry=entry
+		self.entry.insert(0,hint)
+		def on_entry_click(event):
+			if self.entry.get() == hint:
+				self.entry.delete(0,"end")
+				self.entry.config(fg="green")
 
-def on_entry_click(event):
-	if budget_entry.get() == hint:
-		budget_entry.delete(0,"end")
-		budget_entry.config(fg="green")
+		def on_focusout(event):
+			if self.entry.get() == "":
+				self.entry.insert(0,hint)
+				self.entry.config(fg="red")
 
-def on_focusout(event):
-	if budget_entry.get() == "":
-		budget_entry.insert(0,hint)
-		budget_entry.config(fg="red")
+		self.entry.bind("<FocusIn>", on_entry_click)
+		self.entry.bind("<FocusOut>", on_focusout)
 
-budget_entry.bind("<FocusIn>", on_entry_click)
-budget_entry.bind("<FocusOut>", on_focusout)
-
+Hint(budget_entry,"Enter your budget..")
 budget_entry.grid(row=0, column=0, padx=5)
 
 
@@ -198,18 +206,18 @@ class TableCell:
 		self.label.grid(row=row,column=column,padx=5,pady=5)
 
 
-class TableItem:
-	def __init__(self,frame,name,price,available_qty,row):
+class ShelfItem:
+	def __init__(self,name,price,available_qty,row):
 		self.name_str=name
 		self.price_val=price
 		self.available_qty=available_qty
 
-		TableCell(frame,name,row,0)
-		TableCell(frame,price,row,1)
-		TableCell(frame,quantity,row,2)
+		TableCell(shelf_frame,name,row,0)
+		TableCell(shelf_frame,price,row,1)
+		TableCell(shelf_frame,available_qty,row,2)
 
-		self.add_to_cart=tk.Button(
-			frame,
+		self.add_cart=tk.Button(
+			shelf_frame,
 			text="Add to Cart",
 			command=lambda: self.add_to_cart(),
 			fg="black",
@@ -223,14 +231,71 @@ class TableItem:
 		self.add_to_cart.grid(row=row,column=3,padx=5,pady=5)
 
 	def add_to_cart(self):
-		
+
+		self.add_cart.destroy()
+
+		qty_frame=tk.Frame(shelf_frame)
+		qty_frame.grid(row=row,column=3,padx=5,pady=5)
+
+		self.dec_button=tk.Button(
+			qty_frame,
+			text="-",
+			command=lambda: self.dec_qty(),
+			fg="black",
+			bg="white",
+			relief="raised",
+			bd=1,
+			activebackground="grey",
+			font=("Times New Roman",20)
+			).grid(row=0,column=0,padx=1,pady=1)
+
+		self.qty_entry=tk.Entry(
+			qty_frame,
+			bd=1,
+			relief="raised",
+			bg="black",
+			fg="red",
+			font=("Times New Roman",20)
+			)
+		Hint(self.qty_entry,"Qty")
+		self.qty_entry.grid(row=0,column=1)
+		self.available_qty-=int(self.qty_entry.get())
+
+		self.inc_button=tk.Button(
+			qty_frame,
+			text="+",
+			command=lambda: self.inc_qty(),
+			fg="black",
+			bg="white",
+			relief="raised",
+			bd=1,
+			activebackground="grey",
+			font=("Times New Roman",20)
+			).grid(row=0,column=2,padx=1,pady=1)
+
+	def dec_qty(self):
+		user_qty=int(self.qty_entry.get())
+		user_qty-=1
+		self.qty_entry.insert(0,user_qty)
+		self.available_qty+=1
+
+	def inc_qty(self):
+		user_qty=int(self.qty_entry.get())
+		user_qty+=1
+		self.qty_entry.insert(0,user_qty)
 		self.available_qty-=1
+
 		TableCell(self.frame,self.available_qty,self.row,2)
 
 		global cart_label
 		if(cart_label):
 			cart_label.destroy()
-		render_cart()
+
+		global render_cart
+		if not render_cart:
+			render_cart()
+
+		update_cart()
 
 
 TableHeading(shelf_frame,"Item Name",column=0)
