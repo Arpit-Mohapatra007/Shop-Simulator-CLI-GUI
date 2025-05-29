@@ -1,7 +1,3 @@
-Here’s a more **interactive and engaging version of your README file** that’s beginner-friendly, visually structured, and helpful for users who want to quickly get started with the **Shop Simulator** project.
-
----
-
 # 🛒 **Shop Simulator**
 
 A **Python-based interactive shopping simulation** offering both **CLI** and **Tkinter GUI** modes. Designed for **Shopkeepers** to manage inventory and **Customers** to shop with budgets, carts, and billing — all powered by CSV-based storage!
