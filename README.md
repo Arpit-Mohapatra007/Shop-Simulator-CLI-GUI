@@ -2,7 +2,8 @@
 
 A Python-based Shop Simulator application featuring both a command-line interface (CLI) and a graphical user interface (GUI) built with Tkinter for customers and shopkeepers to manage store inventory and shopping carts. The backend logic handles CSV file storage, item management, cart operations, and billing for the GUI but CLI have integrated backend and frontend.
 
-*Project Overview*
+*Project Overview*:
+
 This Shop Simulator supports two interfaces:
 CLI Version: A terminal-based simulation for Shopkeeper and Customer modes.
 GUI Version: A Tkinter-based graphical application for the same workflows.
