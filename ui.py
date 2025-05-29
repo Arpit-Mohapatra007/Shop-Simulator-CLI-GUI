@@ -14,7 +14,30 @@ class ShopSimulatorGUI:
         
         initialize_files()
         self.create_main_menu()
-        
+
+    class Hint: 
+        def __init__(self,entry,hint):
+            self.hint = hint
+            self.entry = entry
+            self.entry.insert(0, hint)  
+            self.entry.config(fg="red")
+            def on_click_entry(event):
+                if self.entry.get() == self.hint:
+                    self.entry.delete(0, tk.END)
+                    self.entry.insert(0,"")
+                    self.entry.config(fg="green")
+            
+
+            def on_focusout_entry(event):
+                if self.entry.get() == "":
+                    self.entry.insert(0, self.hint)
+                    self.entry.config(fg="red")
+
+            entry.bind("<FocusIn>", on_click_entry)
+            entry.bind("<FocusOut>", on_focusout_entry)
+
+
+
     def clear_screen(self):
         """Clear all widgets from the screen"""
         for widget in self.root.winfo_children():
@@ -465,6 +488,7 @@ class ShopSimulatorGUI:
             width=15,
             justify='center'
         )
+        self.Hint(self.budget_entry,"in USD")
         self.budget_entry.pack(pady=10)
         
         tk.Button(
@@ -526,8 +550,8 @@ class ShopSimulatorGUI:
         
         tk.Button(
             button_frame,
-            text="View Cart",
-            command=self.view_cart,
+            text="Remove Item(s)",
+            command=self.remove_from_cart,
             fg="black",
             bg="lightblue",
             font=("Times New Roman", 12)
@@ -608,7 +632,7 @@ class ShopSimulatorGUI:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Headers
-        headers = ["PID", "Name", "Price", "Available", "Add to Cart"]
+        headers = ["PID", "Name", "Price", "Available", "Action"]
         for col, header in enumerate(headers):
             tk.Label(
                 scrollable_frame,
@@ -636,17 +660,22 @@ class ShopSimulatorGUI:
                     width=15
                 ).grid(row=row, column=col, padx=1, pady=1)
             
-            # Add to cart button
-            tk.Button(
-                scrollable_frame,
-                text="Add",
-                command=lambda pid=item[0]: self.add_to_cart_dialog(pid),
-                fg="black",
-                bg="lightgreen",
-                font=("Times New Roman", 12),
-                width=15
-            ).grid(row=row, column=4, padx=1, pady=1)
-    
+            # Check if item is in cart
+            cart_item = self.get_cart_item(item[0])
+            if cart_item:
+                qty = cart_item[3]  # Cart quantity
+                self.create_quantity_controls(scrollable_frame, row, item[0], qty)
+            else:
+                tk.Button(
+                    scrollable_frame,
+                    text="Add",
+                    command=lambda pid=item[0]: self.add_to_cart_dialog(pid),
+                    fg="black",
+                    bg="lightgreen",
+                    font=("Times New Roman", 12),
+                    width=15
+                ).grid(row=row, column=4, padx=1, pady=1)
+
     def add_to_cart_dialog(self, pid):
         """Dialog to add item to cart"""
         item = get_store_item(pid)
@@ -662,8 +691,71 @@ class ShopSimulatorGUI:
                 self.customer_interface()  # Refresh interface
             else:
                 messagebox.showerror("Error", message)
-    
-    def view_cart(self):
+
+    def create_quantity_controls(self, parent, row, pid, qty):
+        """Create quantity adjustment controls at the specified row"""
+        quantity_frame = tk.Frame(parent, bg="black")
+        quantity_frame.grid(row=row, column=4, padx=1, pady=1)
+
+        tk.Button(
+            quantity_frame,
+            text="-",
+            command=lambda: self.decrease_quantity(pid),
+            fg="black",
+            bg="white",
+            font=("Times New Roman", 12),
+            width=3
+        ).grid(row=0, column=0, padx=1, pady=1)
+
+        qty_entry = tk.Entry(
+            quantity_frame,
+            font=("Times New Roman", 12),
+            fg="green",
+            bg="black",
+            width=5,
+            justify='center',
+        )
+        qty_entry.insert(0, str(qty))
+        qty_entry.grid(row=0, column=1, padx=1, pady=1)
+        
+
+        tk.Button(
+            quantity_frame,
+            text="+",
+            command=lambda: self.increase_quantity(pid),
+            fg="black",
+            bg="white",
+            font=("Times New Roman", 12),
+            width=3
+        ).grid(row=0, column=2, padx=1, pady=1)
+
+    def increase_quantity(self, pid):
+        """Increase the quantity of an item in the cart"""
+        success, message = add_to_cart(pid, 1)
+        if success:
+            self.customer_interface()  # Refresh interface
+        else:
+            messagebox.showerror("Error", message)
+
+    def decrease_quantity(self, pid):
+        """Decrease the quantity of an item in the cart"""
+        cart_item = self.get_cart_item(pid)
+        if cart_item:
+            success, message = remove_from_cart(pid, 1)
+            if success:
+                self.customer_interface()  # Refresh interface
+            else:
+                messagebox.showerror("Error", message)
+
+    def get_cart_item(self, pid):
+        """Retrieve an item from the cart by PID"""
+        cart_items = read_cart_items()
+        for item in cart_items:
+            if item[0] == pid:
+                return item
+        return None
+            
+    def remove_from_cart(self):
         """Display detailed cart view in a new window"""
         dialog = tk.Toplevel(self.root)
         dialog.title("Your Cart")
