@@ -148,6 +148,47 @@ def remove_from_cart(pid, qty=None):
     
     return False, "Item not found in cart"
 
+def get_cart_quantity(pid):
+    """Get item quantity in cart"""
+    cart_items = read_cart_items()
+    for cart_item in cart_items:
+        if cart_item[0] == pid:
+            return int(cart_item[3])
+    return 0
+
+def get_store_item_quantity(pid):
+    """Get item quantity in store"""
+    store_item = get_store_item(pid)
+    if store_item:
+        return int(store_item[3])
+    return 0
+
+def update_cart_quantity(pid, new_qty):
+    """Update item quantity in cart"""
+    # Get current quantity in cart (assume this function exists)
+    current_qty = get_cart_quantity(pid)
+    
+    # Calculate the difference
+    diff = int(new_qty) - current_qty
+    
+    if diff > 0:
+        # Increasing quantity: check store inventory and add to cart
+        store_qty = get_store_item_quantity(pid)  # Assume this function exists
+        if store_qty < diff:
+            return False, "Insufficient inventory"
+        add_to_cart(pid, qty=diff)
+        update_store_item_quantity(pid, store_qty - diff)
+    elif diff < 0:
+        # Decreasing quantity: remove from cart and return to store
+        remove_from_cart(pid, qty=-diff)
+        store_qty = get_store_item_quantity(pid)
+        update_store_item_quantity(pid, store_qty + (-diff))
+    else:
+        # No change needed
+        return True, "Quantity unchanged"
+    
+    return True, "Quantity updated in cart"
+
 def calculate_bill():
     """Calculate total bill with tax"""
     cart_items = read_cart_items()

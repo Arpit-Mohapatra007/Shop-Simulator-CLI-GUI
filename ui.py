@@ -526,6 +526,15 @@ class ShopSimulatorGUI:
         self.user_budget = budget
         self.customer_interface()
     
+    def subtract_from_budget(self, amount):
+        self.user_budget -= (amount+0.15*amount)
+        self.budget_label.config(text=f"Budget: ${self.user_budget:.2f}")
+
+
+    def add_to_budget(self, amount):
+        self.user_budget += (amount+0.15*amount)
+        self.budget_label.config(text=f"Budget: ${self.user_budget:.2f}")
+
     def customer_interface(self):
         """Main customer shopping interface"""
         self.clear_screen()
@@ -538,7 +547,7 @@ class ShopSimulatorGUI:
         self.budget_label = tk.Label(
             top_frame,
             text=f"Budget: ${self.user_budget:.2f}",
-            fg="green",
+            fg="green" if self.user_budget >0 else "red",
             bg="black",
             font=("Times New Roman", 20)
         )
@@ -685,6 +694,7 @@ class ShopSimulatorGUI:
         
         qty = simpledialog.askinteger("Add to Cart", f"Enter quantity for {item[1]} (Available: {item[3]}):", minvalue=1)
         if qty is not None:
+            self.subtract_from_budget(float(get_store_item(pid)[2])*qty)
             success, message = add_to_cart(pid, qty)
             if success:
                 messagebox.showinfo("Success", message)
@@ -733,6 +743,7 @@ class ShopSimulatorGUI:
         """Increase the quantity of an item in the cart"""
         success, message = add_to_cart(pid, 1)
         if success:
+            self.subtract_from_budget(float(get_store_item(pid)[2]))
             self.customer_interface()  # Refresh interface
         else:
             messagebox.showerror("Error", message)
@@ -743,6 +754,7 @@ class ShopSimulatorGUI:
         if cart_item:
             success, message = remove_from_cart(pid, 1)
             if success:
+                self.add_to_budget(float(get_store_item(pid)[2]))
                 self.customer_interface()  # Refresh interface
             else:
                 messagebox.showerror("Error", message)
