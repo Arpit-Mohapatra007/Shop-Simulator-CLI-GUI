@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
-from backend import *
+from ShopSim_backend import *
 
 class ShopSimulatorGUI:
     def __init__(self):
